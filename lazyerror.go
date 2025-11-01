@@ -47,26 +47,38 @@ var (
 )
 
 // lazyerror adds a single program counter to the wrapped error.
+//
+// TODO https://github.com/AlekSi/lazyerrors/issues/1
 type lazyerror struct {
 	err error
 	pc  uintptr
 }
 
-// Error implements [error] interface.
-func (le lazyerror) Error() string {
+// loc returns file, line and function name for the stored program counter.
+//
+// Should it return original or shortened paths?
+// TODO https://github.com/AlekSi/lazyerrors/issues/1
+func (le lazyerror) loc() (file string, line int, function string) {
 	if le.pc == 0 {
-		return le.err.Error()
+		return
 	}
 
 	frame, _ := runtime.CallersFrames([]uintptr{le.pc}).Next()
-	if frame.File == "" || frame.Function == "" {
+	return frame.File, frame.Line, frame.Function
+}
+
+// Error implements [error] interface.
+func (le lazyerror) Error() string {
+	file, line, function := le.loc()
+	if file == "" && function == "" {
 		return le.err.Error()
 	}
 
 	return fmt.Sprintf(
 		Format,
-		shortPath(frame.File, FileSegments), frame.Line,
-		shortPath(frame.Function, FunctionSegments),
+		shorten(file, FileSegments),
+		line,
+		shorten(function, FunctionSegments),
 		le.err.Error(),
 	)
 }
@@ -83,20 +95,22 @@ func (le lazyerror) Unwrap() error {
 	return le.err
 }
 
-// shortPath returns shorter path for the given path.
-func shortPath(path string, parts int) string {
+// shorten returns the shortened form of the given path.
+//
+// TODO https://github.com/AlekSi/lazyerrors/issues/1
+func shorten(path string, segments int) string {
 	switch {
-	case parts == 0:
+	case segments == 0:
 		return ""
 
-	case parts == 1:
+	case segments == 1:
 		if i := strings.LastIndexByte(path, '/'); i != -1 {
 			return path[i+1:]
 		}
 
-	case parts > 1:
+	case segments > 1:
 		p := strings.SplitAfter(path, "/")
-		if i := len(p) - parts; i > 0 {
+		if i := len(p) - segments; i > 0 {
 			return strings.Join(p[i:], "")
 		}
 	}
@@ -106,6 +120,12 @@ func shortPath(path string, parts int) string {
 
 // check interfaces
 var (
+	_ error                       = &lazyerror{}
+	_ fmt.GoStringer              = &lazyerror{}
+	_ interface{ Unwrap() error } = &lazyerror{}
+
+	// Should the receiver be a value?
+	// TODO https://github.com/AlekSi/lazyerrors/issues/1
 	_ error                       = lazyerror{}
 	_ fmt.GoStringer              = lazyerror{}
 	_ interface{ Unwrap() error } = lazyerror{}
