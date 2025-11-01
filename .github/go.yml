@@ -1,0 +1,38 @@
+---
+name: Go
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  schedule:
+    - cron: "12 2 * * *"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        go: ["1.24.x", "1.25.x"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Run tests
+        run: |
+          go mod tidy
+          go test -race -count=1 ./...
+          git status
+          git diff --exit-code
