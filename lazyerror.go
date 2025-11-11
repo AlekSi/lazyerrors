@@ -67,7 +67,9 @@ func (le lazyerror) loc() (file string, line int, function string) {
 	return frame.File, frame.Line, frame.Function
 }
 
-// Error implements [error] interface.
+// Error implements the [error] interface.
+//
+// It returns the wrapped error's message with location information.
 func (le lazyerror) Error() string {
 	file, line, function := le.loc()
 	if file == "" && function == "" {
@@ -83,9 +85,9 @@ func (le lazyerror) Error() string {
 	)
 }
 
-// GoString implements [fmt.GoStringer] interface.
+// GoString implements the [fmt.GoStringer] interface.
 //
-// It exists so %#v fmt verb could correctly print wrapped errors.
+// It exists so `%#v` fmt verb could correctly print wrapped errors.
 func (le lazyerror) GoString() string {
 	return fmt.Sprintf("lazyerror{%q}", le.Error())
 }
