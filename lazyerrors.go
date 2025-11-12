@@ -22,6 +22,8 @@
 // Only one location is captured for each error value, not a full call stack.
 // If the "return stack" is needed, use the functions mentioned above
 // with each return statement, channel operations, etc.
+// This return stack is superior to the regular call stack,
+// as it correctly shows line numbers of error propagation.
 //
 // Actual error formatting happens lazily in the `Error() string` method,
 // and can be changed by setting [FileSegments], [FunctionSegments], and [Format] variables.
