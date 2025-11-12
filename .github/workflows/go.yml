@@ -30,8 +30,14 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Run tests
+        run: go test -race -count=1 ./...
+
+      - name: Run benchmarks
+        run: go test -run=nothing -bench=.
+
+      - name: Check dirtiness
         run: |
           go mod tidy
-          go test -race -count=1 ./...
+          gofmt -s -w .
           git status
           git diff --exit-code

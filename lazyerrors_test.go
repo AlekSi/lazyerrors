@@ -47,7 +47,7 @@ func assertNotEqual[T any](t testing.TB, expected, actual T) {
 	t.Errorf("Equal, but should not be:\nexpected: %#v\nactual  : %#v", expected, actual)
 }
 
-// unwrap [errors.Unwrap] err n times.
+// unwrap calls [errors.Unwrap] on err n times.
 func unwrap(err error, n int) error {
 	for range n {
 		err = errors.Unwrap(err)
@@ -223,30 +223,32 @@ func TestShortPath(t *testing.T) {
 
 var drain error
 
+// See https://github.com/golang/go/issues/73137 for why both b.Loop and range b.N are used.
+
 func BenchmarkStdNew(b *testing.B) {
 	b.ReportAllocs()
 
 	for b.Loop() {
-		drain = errors.New("lazyerrors_test.go:179 (lazyerrors.BenchmarkStdNew): err")
+		drain = errors.New("lazyerrors_test.go:123 (lazyerrors.BenchmarkStdNew): err")
 	}
 
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:179 (lazyerrors.BenchmarkStdNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:123 (lazyerrors.BenchmarkStdNew): err", drain.Error())
 }
 
 func BenchmarkNStdNew(b *testing.B) {
 	b.ReportAllocs()
 
 	for range b.N {
-		drain = errors.New("lazyerrors_test.go:192 (lazyerrors.BenchmarkNStdNew): err")
+		drain = errors.New("lazyerrors_test.go:123 (lazyerrors.BenchmarkNStdNew): err")
 	}
 
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:192 (lazyerrors.BenchmarkNStdNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:123 (lazyerrors.BenchmarkNStdNew): err", drain.Error())
 }
 
 func BenchmarkNew(b *testing.B) {
@@ -259,7 +261,7 @@ func BenchmarkNew(b *testing.B) {
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:235 (lazyerrors.BenchmarkNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:258 (lazyerrors.BenchmarkNew): err", drain.Error())
 }
 
 func BenchmarkNNew(b *testing.B) {
@@ -272,7 +274,7 @@ func BenchmarkNNew(b *testing.B) {
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:248 (lazyerrors.BenchmarkNNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:271 (lazyerrors.BenchmarkNNew): err", drain.Error())
 }
 
 func Example() {
@@ -295,6 +297,6 @@ func Example() {
 	fmt.Println(errors.Is(err, io.EOF))
 
 	// Output:
-	// lazyerrors_test.go:286: lazyerrors_test.go:281: i'm not lazy: EOF
+	// lazyerrors_test.go:288: lazyerrors_test.go:283: i'm not lazy: EOF
 	// true
 }
