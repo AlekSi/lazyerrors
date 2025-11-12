@@ -17,13 +17,13 @@
 // file path, line number, and function/method name.
 //
 // [New], [Error], [Errorf], and [Join] functions create a new error
-// with a single location captured as a single uintptr.
+// with location captured as a single uintptr for Program Counter (PC).
 //
 // Only one location is captured for each error value, not a full call stack.
 // If the "return stack" is needed, use the functions mentioned above
 // with each return statement, channel operations, etc.
 //
-// Actual error formatting happens lazily in the "Error() string" method,
+// Actual error formatting happens lazily in the `Error() string` method,
 // and can be changed by setting [FileSegments], [FunctionSegments], and [Format] variables.
 package lazyerrors
 
@@ -64,8 +64,8 @@ func Errorf(format string, a ...any) error {
 // Join returns an error created with [errors.Join] wrapped with a single location.
 //
 // Any nil error values are discarded, and nil is returned if no values are left.
-// But unlike [errors.Join], a non-nil error returned implements the "Unwrap() error" method,
-// not "Unwrap() []error".
+// But unlike [errors.Join], a non-nil error returned implements the `Unwrap() error` method,
+// not `Unwrap() []error`.
 func Join(errs ...error) error {
 	err := errors.Join(errs...)
 	if err == nil {
