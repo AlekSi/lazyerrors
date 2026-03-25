@@ -258,7 +258,7 @@ func BenchmarkNew(b *testing.B) {
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:268 (lazyerrors.BenchmarkNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:255 (lazyerrors.BenchmarkNew): err", drain.Error())
 }
 
 func Example() {

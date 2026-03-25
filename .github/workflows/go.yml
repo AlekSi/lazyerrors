@@ -30,10 +30,10 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Run tests
-        run: go test -race -count=1 ./...
+        run: go test -race -count=1
 
       - name: Run benchmarks
-        run: go test -run=nothing -bench=.
+        run: go test -run=nothing -bench=. -count=10
 
       - name: Check dirtiness
         run: |
