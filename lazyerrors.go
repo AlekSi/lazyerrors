@@ -44,12 +44,55 @@ func New(s string) error {
 }
 
 // Error returns an error wrapped with a single location.
+// Passed error must not be nil.
 func Error(err error) error {
 	if err == nil {
 		panic("err is nil")
 	}
 
 	return lazyerror{
+		err: err,
+		pc:  pc(),
+	}
+}
+
+// Maybe returns an error wrapped with a single location,
+// or nil, if err is nil.
+func Maybe(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	return lazyerror{
+		err: err,
+		pc:  pc(),
+	}
+}
+
+// Maybe2 returns an error wrapped with a single location, along with a zero value of T, if err is not nil.
+// Otherwise, it returns (v, nil).
+func Maybe2[T any](v T, err error) (T, error) {
+	if err == nil {
+		return v, nil
+	}
+
+	var zero T
+	return zero, lazyerror{
+		err: err,
+		pc:  pc(),
+	}
+}
+
+// Maybe3 returns an error wrapped in a single location, along with zero values for T1 and T2, if err is not nil.
+// Otherwise, it returns (v1, v2, nil).
+func Maybe3[T1, T2 any](v1 T1, v2 T2, err error) (T1, T2, error) {
+	if err == nil {
+		return v1, v2, nil
+	}
+
+	var zero1 T1
+	var zero2 T2
+	return zero1, zero2, lazyerror{
 		err: err,
 		pc:  pc(),
 	}
