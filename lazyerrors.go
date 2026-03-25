@@ -43,6 +43,14 @@ func New(s string) error {
 	}
 }
 
+// Errorf returns an error created with [fmt.Errorf] wrapped with a single location.
+func Errorf(format string, a ...any) error {
+	return lazyerror{
+		err: fmt.Errorf(format, a...),
+		pc:  pc(),
+	}
+}
+
 // Error returns an error wrapped with a single location.
 // It panics if err is nil; the caller is expected to check if err != nil before using this function.
 // Alternatively, use [Maybe] instead.
@@ -70,39 +78,28 @@ func Maybe(err error) error {
 	}
 }
 
-// Maybe2 returns an error wrapped with a single location, along with a zero value of T, if err is not nil.
+// Maybe2 returns an error wrapped with a single location, along with v, if err is not nil.
 // Otherwise, it returns (v, nil).
 func Maybe2[T any](v T, err error) (T, error) {
 	if err == nil {
 		return v, nil
 	}
 
-	var zero T
-	return zero, lazyerror{
+	return v, lazyerror{
 		err: err,
 		pc:  pc(),
 	}
 }
 
-// Maybe3 returns an error wrapped in a single location, along with zero values for T1 and T2, if err is not nil.
+// Maybe3 returns an error wrapped in a single location, along with v1 and v2, if err is not nil.
 // Otherwise, it returns (v1, v2, nil).
 func Maybe3[T1, T2 any](v1 T1, v2 T2, err error) (T1, T2, error) {
 	if err == nil {
 		return v1, v2, nil
 	}
 
-	var zero1 T1
-	var zero2 T2
-	return zero1, zero2, lazyerror{
+	return v1, v2, lazyerror{
 		err: err,
-		pc:  pc(),
-	}
-}
-
-// Errorf returns an error created with [fmt.Errorf] wrapped with a single location.
-func Errorf(format string, a ...any) error {
-	return lazyerror{
-		err: fmt.Errorf(format, a...),
 		pc:  pc(),
 	}
 }
