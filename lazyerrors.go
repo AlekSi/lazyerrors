@@ -16,7 +16,7 @@
 // Package lazyerrors provides error wrapping with location information:
 // file path, line number, and function/method name.
 //
-// [New], [Error], [Errorf], and [Join] functions create a new error
+// [New], [Error], [Errorf], [Join], and [Maybe]/[Maybe2]/[Maybe3] functions create a new error
 // with location captured as a single uintptr for Program Counter (PC).
 //
 // Only one location is captured for each error value, not a full call stack.
@@ -44,7 +44,8 @@ func New(s string) error {
 }
 
 // Error returns an error wrapped with a single location.
-// Passed error must not be nil.
+// It panics if err is nil; the caller is expected to check if err != nil before using this function.
+// Alternatively, use [Maybe] instead.
 func Error(err error) error {
 	if err == nil {
 		panic("err is nil")

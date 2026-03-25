@@ -156,12 +156,18 @@ func TestErrors(t *testing.T) {
 }
 
 func TestMaybe(t *testing.T) {
-	_, _, err := Maybe3(net.ParseCIDR("192.0.2.1/24"))
-	assertEqual(t, nil, err)
+	t.Parallel()
 
-	_, _, err = Maybe3(net.ParseCIDR("foo"))
-	expected := "lazyerrors_test.go:162 (lazyerrors.TestMaybe): invalid CIDR address: foo"
+	ip, n, err := Maybe3(net.ParseCIDR("192.0.2.1/24"))
+	assertEqual(t, nil, err)
+	assertEqual(t, "192.0.2.1", ip.String())
+	assertEqual(t, "192.0.2.0/24", n.String())
+
+	ip, n, err = Maybe3(net.ParseCIDR("foo"))
+	expected := "lazyerrors_test.go:166 (lazyerrors.TestMaybe): invalid CIDR address: foo"
 	assertEqual(t, expected, err.Error())
+	assertEqual(t, nil, ip)
+	assertEqual(t, nil, n)
 }
 
 func TestPC(t *testing.T) {
@@ -178,7 +184,7 @@ func TestPC(t *testing.T) {
 
 	err := <-ch
 	runtime.Gosched()
-	assertEqual(t, "lazyerrors_test.go:176 (lazyerrors.TestPC.func1): err", err.Error())
+	assertEqual(t, "lazyerrors_test.go:182 (lazyerrors.TestPC.func1): err", err.Error())
 }
 
 // errPackage is a package-level error to test init function call location.
@@ -258,7 +264,7 @@ func BenchmarkNew(b *testing.B) {
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:255 (lazyerrors.BenchmarkNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:261 (lazyerrors.BenchmarkNew): err", drain.Error())
 }
 
 func Example() {
@@ -281,6 +287,6 @@ func Example() {
 	fmt.Println(errors.Is(err, io.EOF))
 
 	// Output:
-	// lazyerrors_test.go:272: lazyerrors_test.go:267: i'm not lazy: EOF
+	// lazyerrors_test.go:278: lazyerrors_test.go:273: i'm not lazy: EOF
 	// true
 }
