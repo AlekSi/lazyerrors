@@ -16,7 +16,7 @@
 // Package lazyerrors provides error wrapping with location information:
 // file path, line number, and function/method name.
 //
-// [New], [Error], [Errorf], and [Join] functions create a new error
+// [New], [Errorf], [Error], [Maybe]/[Maybe2]/[Maybe3], and [Join] functions create a new error
 // with location captured as a single uintptr for Program Counter (PC).
 //
 // Only one location is captured for each error value, not a full call stack.
@@ -43,7 +43,17 @@ func New(s string) error {
 	}
 }
 
+// Errorf returns an error created with [fmt.Errorf] wrapped with a single location.
+func Errorf(format string, a ...any) error {
+	return lazyerror{
+		err: fmt.Errorf(format, a...),
+		pc:  pc(),
+	}
+}
+
 // Error returns an error wrapped with a single location.
+// It panics if err is nil; the caller is expected to check if err != nil before using this function.
+// Alternatively, use [Maybe] instead.
 func Error(err error) error {
 	if err == nil {
 		panic("err is nil")
@@ -55,10 +65,41 @@ func Error(err error) error {
 	}
 }
 
-// Errorf returns an error created with [fmt.Errorf] wrapped with a single location.
-func Errorf(format string, a ...any) error {
+// Maybe returns an error wrapped with a single location,
+// or nil, if err is nil.
+func Maybe(err error) error {
+	if err == nil {
+		return nil
+	}
+
 	return lazyerror{
-		err: fmt.Errorf(format, a...),
+		err: err,
+		pc:  pc(),
+	}
+}
+
+// Maybe2 returns an error wrapped with a single location, along with v, if err is not nil.
+// Otherwise, it returns (v, nil).
+func Maybe2[T any](v T, err error) (T, error) {
+	if err == nil {
+		return v, nil
+	}
+
+	return v, lazyerror{
+		err: err,
+		pc:  pc(),
+	}
+}
+
+// Maybe3 returns an error wrapped in a single location, along with v1 and v2, if err is not nil.
+// Otherwise, it returns (v1, v2, nil).
+func Maybe3[T1, T2 any](v1 T1, v2 T2, err error) (T1, T2, error) {
+	if err == nil {
+		return v1, v2, nil
+	}
+
+	return v1, v2, lazyerror{
+		err: err,
 		pc:  pc(),
 	}
 }

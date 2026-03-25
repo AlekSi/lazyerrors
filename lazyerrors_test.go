@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"reflect"
 	"runtime"
 	"strings"
@@ -97,34 +98,34 @@ func TestErrors(t *testing.T) {
 	err2 := Errorf("err2: %w", err1)
 	err3 := Errorf("err3: %w", err2)
 
-	expected := "lazyerrors_test.go:95 (lazyerrors.TestErrors): err"
+	expected := "lazyerrors_test.go:96 (lazyerrors.TestErrors): err"
 	assertEqual(t, expected, err.Error())
-	expected = "lazyerrors_test.go:96 (lazyerrors.TestErrors): err1: " +
-		"lazyerrors_test.go:95 (lazyerrors.TestErrors): err"
+	expected = "lazyerrors_test.go:97 (lazyerrors.TestErrors): err1: " +
+		"lazyerrors_test.go:96 (lazyerrors.TestErrors): err"
 	assertEqual(t, expected, err1.Error())
-	expected = "lazyerrors_test.go:97 (lazyerrors.TestErrors): err2: " +
-		"lazyerrors_test.go:96 (lazyerrors.TestErrors): err1: " +
-		"lazyerrors_test.go:95 (lazyerrors.TestErrors): err"
+	expected = "lazyerrors_test.go:98 (lazyerrors.TestErrors): err2: " +
+		"lazyerrors_test.go:97 (lazyerrors.TestErrors): err1: " +
+		"lazyerrors_test.go:96 (lazyerrors.TestErrors): err"
 	assertEqual(t, expected, err2.Error())
-	expected = "lazyerrors_test.go:98 (lazyerrors.TestErrors): err3: " +
-		"lazyerrors_test.go:97 (lazyerrors.TestErrors): err2: " +
-		"lazyerrors_test.go:96 (lazyerrors.TestErrors): err1: " +
-		"lazyerrors_test.go:95 (lazyerrors.TestErrors): err"
+	expected = "lazyerrors_test.go:99 (lazyerrors.TestErrors): err3: " +
+		"lazyerrors_test.go:98 (lazyerrors.TestErrors): err2: " +
+		"lazyerrors_test.go:97 (lazyerrors.TestErrors): err1: " +
+		"lazyerrors_test.go:96 (lazyerrors.TestErrors): err"
 	assertEqual(t, expected, err3.Error())
 
-	expected = `lazyerror{"lazyerrors_test.go:95 (lazyerrors.TestErrors): err"}`
+	expected = `lazyerror{"lazyerrors_test.go:96 (lazyerrors.TestErrors): err"}`
 	assertEqual(t, expected, fmt.Sprintf("%#v", err))
-	expected = `lazyerror{"lazyerrors_test.go:96 (lazyerrors.TestErrors): err1: ` +
-		`lazyerrors_test.go:95 (lazyerrors.TestErrors): err"}`
+	expected = `lazyerror{"lazyerrors_test.go:97 (lazyerrors.TestErrors): err1: ` +
+		`lazyerrors_test.go:96 (lazyerrors.TestErrors): err"}`
 	assertEqual(t, expected, fmt.Sprintf("%#v", err1))
-	expected = `lazyerror{"lazyerrors_test.go:97 (lazyerrors.TestErrors): err2: ` +
-		`lazyerrors_test.go:96 (lazyerrors.TestErrors): err1: ` +
-		`lazyerrors_test.go:95 (lazyerrors.TestErrors): err"}`
+	expected = `lazyerror{"lazyerrors_test.go:98 (lazyerrors.TestErrors): err2: ` +
+		`lazyerrors_test.go:97 (lazyerrors.TestErrors): err1: ` +
+		`lazyerrors_test.go:96 (lazyerrors.TestErrors): err"}`
 	assertEqual(t, expected, fmt.Sprintf("%#v", err2))
-	expected = `lazyerror{"lazyerrors_test.go:98 (lazyerrors.TestErrors): err3: ` +
-		`lazyerrors_test.go:97 (lazyerrors.TestErrors): err2: ` +
-		`lazyerrors_test.go:96 (lazyerrors.TestErrors): err1: ` +
-		`lazyerrors_test.go:95 (lazyerrors.TestErrors): err"}`
+	expected = `lazyerror{"lazyerrors_test.go:99 (lazyerrors.TestErrors): err3: ` +
+		`lazyerrors_test.go:98 (lazyerrors.TestErrors): err2: ` +
+		`lazyerrors_test.go:97 (lazyerrors.TestErrors): err1: ` +
+		`lazyerrors_test.go:96 (lazyerrors.TestErrors): err"}`
 	assertEqual(t, expected, fmt.Sprintf("%#v", err3))
 
 	assertNotEqual(t, err, unwrap(err1, 1))
@@ -154,6 +155,21 @@ func TestErrors(t *testing.T) {
 	assertEqual(t, true, errors.Is(err3, err))
 }
 
+func TestMaybe(t *testing.T) {
+	t.Parallel()
+
+	ip, n, err := Maybe3(net.ParseCIDR("192.0.2.1/24"))
+	assertEqual(t, nil, err)
+	assertEqual(t, "192.0.2.1", ip.String())
+	assertEqual(t, "192.0.2.0/24", n.String())
+
+	ip, n, err = Maybe3(net.ParseCIDR("foo"))
+	expected := "lazyerrors_test.go:166 (lazyerrors.TestMaybe): invalid CIDR address: foo"
+	assertEqual(t, expected, err.Error())
+	assertEqual(t, nil, ip)
+	assertEqual(t, nil, n)
+}
+
 func TestPC(t *testing.T) {
 	t.Parallel()
 
@@ -168,7 +184,7 @@ func TestPC(t *testing.T) {
 
 	err := <-ch
 	runtime.Gosched()
-	assertEqual(t, "lazyerrors_test.go:166 (lazyerrors.TestPC.func1): err", err.Error())
+	assertEqual(t, "lazyerrors_test.go:182 (lazyerrors.TestPC.func1): err", err.Error())
 }
 
 // errPackage is a package-level error to test init function call location.
@@ -238,19 +254,6 @@ func BenchmarkStdNew(b *testing.B) {
 	assertEqual(b, "lazyerrors_test.go:123 (lazyerrors.BenchmarkStdNew): err", drain.Error())
 }
 
-func BenchmarkNStdNew(b *testing.B) {
-	b.ReportAllocs()
-
-	for range b.N {
-		drain = errors.New("lazyerrors_test.go:123 (lazyerrors.BenchmarkNStdNew): err")
-	}
-
-	b.StopTimer()
-
-	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:123 (lazyerrors.BenchmarkNStdNew): err", drain.Error())
-}
-
 func BenchmarkNew(b *testing.B) {
 	b.ReportAllocs()
 
@@ -261,20 +264,7 @@ func BenchmarkNew(b *testing.B) {
 	b.StopTimer()
 
 	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:258 (lazyerrors.BenchmarkNew): err", drain.Error())
-}
-
-func BenchmarkNNew(b *testing.B) {
-	b.ReportAllocs()
-
-	for range b.N {
-		drain = New("err")
-	}
-
-	b.StopTimer()
-
-	assertNotEqual(b, nil, drain)
-	assertEqual(b, "lazyerrors_test.go:271 (lazyerrors.BenchmarkNNew): err", drain.Error())
+	assertEqual(b, "lazyerrors_test.go:261 (lazyerrors.BenchmarkNew): err", drain.Error())
 }
 
 func Example() {
@@ -297,6 +287,6 @@ func Example() {
 	fmt.Println(errors.Is(err, io.EOF))
 
 	// Output:
-	// lazyerrors_test.go:288: lazyerrors_test.go:283: i'm not lazy: EOF
+	// lazyerrors_test.go:278: lazyerrors_test.go:273: i'm not lazy: EOF
 	// true
 }
