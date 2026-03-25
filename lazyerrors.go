@@ -16,7 +16,7 @@
 // Package lazyerrors provides error wrapping with location information:
 // file path, line number, and function/method name.
 //
-// [New], [Error], [Errorf], [Join], and [Maybe]/[Maybe2]/[Maybe3] functions create a new error
+// [New], [Errorf], [Error], [Maybe]/[Maybe2]/[Maybe3], and [Join] functions create a new error
 // with location captured as a single uintptr for Program Counter (PC).
 //
 // Only one location is captured for each error value, not a full call stack.
